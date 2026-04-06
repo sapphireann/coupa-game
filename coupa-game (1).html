@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Coupa Request Challenge</title>
+<style>
+  :root { --navy: #0d1b2a; --gold: #c9a84c; --gold-light: #e8c97a; --cream: #f5f0e8; --sage: #4a7c6f; --coral: #c0392b; --slate: #5a7184; --form-bg: #111f2e; --error-red: #e74c3c; --success-green: #27ae60; }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: var(--navy); font-family: Arial, sans-serif; min-height: 100vh; }
+  .container { max-width: 960px; margin: 0 auto; padding: 40px 24px; }
+  .header { text-align: center; margin-bottom: 36px; }
+  .week-badge { display: inline-flex; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; justify-content: center; }
+  .badge { display: inline-block; font-size: 10px; letter-spacing: 2px; text-transform: uppercase; padding: 5px 12px; border-radius: 2px; }
+  .badge-week1 { color: rgba(201,168,76,0.5); border: 1px solid rgba(201,168,76,0.2); }
+  .badge-week2 { color: var(--gold); border: 1px solid rgba(201,168,76,0.5); background: rgba(201,168,76,0.08); }
+  h1 { font-size: clamp(28px, 4vw, 46px); font-weight: 900; color: #f5f0e8; line-height: 1.1; margin-bottom: 10px; }
+  h1 span { color: var(--gold); }
+  .subtitle { color: var(--slate); font-size: 14px; max-width: 600px; margin: 0 auto; line-height: 1.6; }
+  .curriculum-note { display: inline-block; margin-top: 12px; font-size: 12px; color: rgba(201,168,76,0.7); background: rgba(201,168,76,0.06); border: 1px solid rgba(201,168,76,0.15); padding: 6px 14px; border-radius: 20px; }
+  .score-bar { display: flex; align-items: center; justify-content: space-between; background: rgba(255,255,255,0.04); border: 1px solid rgba(201,168,76,0.15); border-radius: 8px; padding: 14px 24px; margin-bottom: 28px; }
+  .score-item { text-align: center; }
+  .score-label { font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--slate); margin-bottom: 4px; }
+  .score-value { font-size: 26px; font-weight: 700; color: #f5f0e8; }
+  .score-value.gold { color: var(--gold); }
+  .score-value.sage { color: #6bbfaf; }
+  .progress-wrap { flex: 1; margin: 0 28px; }
+  .progress-track { height: 4px; background: rgba(255,255,255,0.08); border-radius: 2px; overflow: hidden; }
+  .progress-fill { height: 100%; background: linear-gradient(90deg, var(--gold), var(--gold-light)); border-radius: 2px; transition: width 0.5s ease; }
+  .progress-text { font-size: 11px; color: var(--slate); margin-top: 6px; text-align: center; }
+  .scenario-context { background: rgba(255,255,255,0.03); border: 1px solid rgba(201,168,76,0.2); border-radius: 10px; padding: 20px 24px; margin-bottom: 20px; position: relative; overflow: hidden; }
+  .scenario-context::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, var(--gold), transparent); }
+  .scenario-label { font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--gold); margin-bottom: 8px; }
+  .scenario-desc { font-size: 15px; color: #f5f0e8; line-height: 1.7; }
+  .scenario-task { margin-top: 10px; font-size: 13px; color: var(--slate); font-style: italic; }
+  .coupa-form { background: var(--form-bg); border: 1px solid rgba(201,168,76,0.2); border-radius: 12px; overflow: hidden; margin-bottom: 20px; }
+  .coupa-header { background: rgba(201,168,76,0.1); border-bottom: 1px solid rgba(201,168,76,0.2); padding: 14px 24px; display: flex; align-items: center; justify-content: space-between; }
+  .coupa-title { font-size: 13px; font-weight: 700; color: var(--gold); letter-spacing: 1px; text-transform: uppercase; }
+  .coupa-status { font-size: 11px; color: var(--slate); background: rgba(255,255,255,0.05); padding: 4px 10px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.08); }
+  .coupa-body { padding: 24px; }
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media (max-width: 640px) { .form-grid { grid-template-columns: 1fr; } }
+  .form-field { position: relative; }
+  .form-field.full-width { grid-column: 1 / -1; }
+  .field-label { font-size: 11px; letter-spacing: 1px; text-transform: uppercase; color: var(--slate); margin-bottom: 6px; display: flex; align-items: center; gap: 6px; }
+  .field-required { color: var(--error-red); font-size: 13px; }
+  .field-value { background: rgba(255,255,255,0.05); border: 1.5px solid rgba(255,255,255,0.1); border-radius: 6px; padding: 10px 14px; font-size: 14px; color: #f5f0e8; line-height: 1.5; min-height: 40px; position: relative; transition: all 0.3s; }
+  .field-value.has-error { border-color: var(--error-red); background: rgba(231,76,60,0.08); }
+  .field-value.is-correct { border-color: var(--success-green); background: rgba(39,174,96,0.06); }
+  .field-value.highlighted { border-color: var(--gold); box-shadow: 0 0 0 3px rgba(201,168,76,0.15); }
+  .question-box { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 20px 24px; margin-bottom: 16px; }
+  .question-text { font-size: 16px; color: #f5f0e8; line-height: 1.6; margin-bottom: 16px; }
+  .options-list { display: flex; flex-direction: column; gap: 10px; }
+  .option-btn { background: rgba(255,255,255,0.04); border: 1.5px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 14px 18px; cursor: pointer; text-align: left; transition: all 0.2s; display: flex; align-items: flex-start; gap: 12px; width: 100%; }
+  .option-btn:hover:not(:disabled) { border-color: rgba(201,168,76,0.5); background: rgba(201,168,76,0.05); }
+  .option-letter { font-size: 11px; color: var(--gold); font-weight: 700; min-width: 20px; margin-top: 2px; flex-shrink: 0; }
+  .option-text { font-size: 14px; color: #f5f0e8; line-height: 1.5; }
+  .option-btn.correct { border-color: var(--success-green); background: rgba(39,174,96,0.1); }
+  .option-btn.correct .option-letter { color: #6bbfaf; }
+  .option-btn.wrong { border-color: rgba(255,255,255,0.06); background: rgba(255,255,255,0.02); opacity: 0.5; }
+  .option-btn.selected-wrong { border-color: var(--error-red); background: rgba(231,76,60,0.1); }
+  .option-btn:disabled { cursor: not-allowed; }
+  .feedback { border-radius: 10px; padding: 20px 24px; margin-bottom: 20px; display: none; }
+  .feedback.show { display: block; }
+  .feedback.correct-fb { background: rgba(39,174,96,0.1); border: 1px solid rgba(39,174,96,0.3); }
+  .feedback.wrong-fb { background: rgba(231,76,60,0.08); border: 1px solid rgba(231,76,60,0.25); }
+  .feedback-header { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+  .feedback-icon { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; }
+  .correct-fb .feedback-icon { background: rgba(39,174,96,0.25); }
+  .wrong-fb .feedback-icon { background: rgba(231,76,60,0.2); }
+  .feedback-title { font-size: 16px; font-weight: 700; color: #f5f0e8; }
+  .feedback-body { font-size: 14px; color: rgba(245,240,232,0.8); line-height: 1.7; margin-bottom: 12px; }
+  .feedback-workflow { background: rgba(201,168,76,0.06); border: 1px solid rgba(201,168,76,0.15); border-radius: 6px; padding: 12px 14px; font-size: 13px; color: rgba(201,168,76,0.9); line-height: 1.6; margin-bottom: 10px; }
+  .feedback-workflow-label { font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--gold); margin-bottom: 6px; }
+  .feedback-week1 { background: rgba(74,124,111,0.08); border: 1px solid rgba(74,124,111,0.2); border-radius: 6px; padding: 10px 14px; font-size: 12px; color: #6bbfaf; line-height: 1.6; }
+  .next-btn { display: none; margin: 0 auto; background: linear-gradient(135deg, var(--gold), var(--gold-light)); color: var(--navy); border: none; border-radius: 8px; padding: 14px 40px; font-size: 13px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; cursor: pointer; }
+  .next-btn.show { display: block; }
+  .start-screen.hidden { display: none; }
+  .game-area { display: none; }
+  .game-area.show { display: block; }
+  .start-card { background: rgba(255,255,255,0.03); border: 1px solid rgba(201,168,76,0.2); border-radius: 12px; padding: 36px; margin-bottom: 28px; }
+  .start-card h2 { font-size: 22px; color: #f5f0e8; margin-bottom: 8px; }
+  .start-card p { color: var(--slate); font-size: 14px; margin-bottom: 20px; line-height: 1.6; }
+  .field-guide { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; margin-bottom: 8px; }
+  .field-card { background: rgba(255,255,255,0.04); border: 1px solid rgba(201,168,76,0.15); border-radius: 8px; padding: 16px; }
+  .field-card-name { font-size: 13px; font-weight: 700; color: var(--gold); margin-bottom: 6px; }
+  .field-card-desc { font-size: 12px; color: var(--slate); line-height: 1.6; }
+  .week1-callout { background: rgba(74,124,111,0.08); border: 1px solid rgba(74,124,111,0.25); border-radius: 8px; padding: 16px 20px; margin-bottom: 24px; font-size: 13px; color: #6bbfaf; line-height: 1.7; }
+  .start-btn { background: linear-gradient(135deg, var(--gold), var(--gold-light)); color: var(--navy); border: none; border-radius: 8px; padding: 16px 48px; font-size: 14px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; cursor: pointer; display: block; margin: 28px auto 0; }
+  .results-screen { display: none; text-align: center; }
+  .results-screen.show { display: block; }
+  .results-circle { width: 140px; height: 140px; border-radius: 50%; border: 3px solid var(--gold); display: flex; flex-direction: column; align-items: center; justify-content: center; margin: 0 auto 28px; background: rgba(201,168,76,0.06); }
+  .results-score { font-size: 42px; font-weight: 900; color: var(--gold); line-height: 1; }
+  .results-total { font-size: 13px; color: var(--slate); }
+  .results-title { font-size: 30px; color: #f5f0e8; margin-bottom: 10px; }
+  .results-msg { color: var(--slate); font-size: 15px; max-width: 520px; margin: 0 auto 28px; line-height: 1.7; }
+  .results-breakdown { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 32px; text-align: left; }
+  .breakdown-item { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 14px; }
+  .breakdown-item.correct-bd { border-color: rgba(39,174,96,0.35); }
+  .breakdown-item.wrong-bd { border-color: rgba(231,76,60,0.3); }
+  .restart-btn { background: transparent; border: 1.5px solid var(--gold); color: var(--gold); border-radius: 8px; padding: 14px 40px; font-size: 13px; letter-spacing: 2px; text-transform: uppercase; cursor: pointer; }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <div class="week-badge">
+      <span class="badge badge-week1">Week 1: Contract Templates</span>
+      <span class="badge badge-week2">Week 2: Coupa Requests</span>
+    </div>
+    <h1>Coupa Request <span>Challenge</span></h1>
+    <p class="subtitle">Each scenario shows a real Coupa request. Find the error and understand why it matters for the workflow.</p>
+    <span class="curriculum-note">Builds on Week 1 — contract template knowledge required</span>
+  </div>
+
+  <div class="start-screen" id="startScreen">
+    <div class="week1-callout"><strong>Building on Week 1:</strong> You already know which contract template to use. This week we go deeper — once you have the right template, the Coupa request must be filled in correctly so it can progress through the approval workflow without errors or delays.</div>
+    <div class="start-card">
+      <h2>The 6 Mandatory Fields</h2>
+      <p>Every Coupa request must have these fields completed correctly. A single error can block the request from reaching approvers.</p>
+      <div class="field-guide">
+        <div class="field-card"><div class="field-card-name">Justification</div><div class="field-card-desc">Clear, jargon-free, understandable by an auditor with no business context.</div></div>
+        <div class="field-card"><div class="field-card-name">Request Type</div><div class="field-card-desc">New, Renewal, Termination, Remediation, or RFX. Must accurately reflect the engagement.</div></div>
+        <div class="field-card"><div class="field-card-name">Start and End Date</div><div class="field-card-desc">Must exactly match the dates in the signed contract.</div></div>
+        <div class="field-card"><div class="field-card-name">Dollar Amount</div><div class="field-card-desc">Must match the contract value exactly. Incorrect amounts block financial approvals.</div></div>
+        <div class="field-card"><div class="field-card-name">Legal Framework</div><div class="field-card-desc">GSA, HSA, CSA, or Low Risk Addendum. Must match the master agreement in place.</div></div>
+        <div class="field-card"><div class="field-card-name">Type of Agreement</div><div class="field-card-desc">Amendment, Order Form, or Statement of Work. Describes the document being executed.</div></div>
+      </div>
+    </div>
+    <button class="start-btn" onclick="startGame()">Start the Challenge</button>
+  </div>
+
+  <div class="game-area" id="gameArea">
+    <div class="score-bar">
+      <div class="score-item"><div class="score-label">Score</div><div class="score-value gold" id="scoreDisplay">0</div></div>
+      <div class="progress-wrap">
+        <div class="progress-track"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+        <div class="progress-text" id="progressText">Scenario 1 of 10</div>
+      </div>
+      <div class="score-item"><div class="score-label">Streak</div><div class="score-value sage" id="streakDisplay">0</div></div>
+    </div>
+    <div class="scenario-context">
+      <div class="scenario-label" id="scenarioLabel">Scenario 01</div>
+      <div class="scenario-desc" id="scenarioDesc"></div>
+      <div class="scenario-task" id="scenarioTask"></div>
+    </div>
+    <div class="coupa-form">
+      <div class="coupa-header">
+        <div class="coupa-title">Coupa — Purchase Request</div>
+        <div class="coupa-status">Draft</div>
+      </div>
+      <div class="coupa-body">
+        <div class="form-grid">
+          <div class="form-field full-width">
+            <div class="field-label">Justification <span class="field-required">*</span></div>
+            <div class="field-value" id="field-justification" style="min-height:60px"></div>
+          </div>
+          <div class="form-field">
+            <div class="field-label">Request Type <span class="field-required">*</span></div>
+            <div class="field-value" id="field-requesttype"></div>
+          </div>
+          <div class="form-field">
+            <div class="field-label">Legal Framework <span class="field-required">*</span></div>
+            <div class="field-value" id="field-legalframework"></div>
+          </div>
+          <div class="form-field">
+            <div class="field-label">Start Date <span class="field-required">*</span></div>
+            <div class="field-value" id="field-startdate"></div>
+          </div>
+          <div class="form-field">
+            <div class="field-label">End Date <span class="field-required">*</span></div>
+            <div class="field-value" id="field-enddate"></div>
+          </div>
+          <div class="form-field">
+            <div class="field-label">Dollar Amount <span class="field-required">*</span></div>
+            <div class="field-value" id="field-amount"></div>
+          </div>
+          <div class="form-field">
+            <div class="field-label">Type of Agreement <span class="field-required">*</span></div>
+            <div class="field-value" id="field-agreementtype"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="question-box">
+      <div class="question-text" id="questionText"></div>
+      <div class="options-list" id="optionsList"></div>
+    </div>
+    <div class="feedback" id="feedback">
+      <div class="feedback-header">
+        <div class="feedback-icon" id="feedbackIcon"></div>
+        <div class="feedback-title" id="feedbackTitle"></div>
+      </div>
+      <div class="feedback-body" id="feedbackBody"></div>
+      <div class="feedback-workflow" id="feedbackWorkflow" style="display:none">
+        <div class="feedback-workflow-label">Workflow Impact</div>
+        <div id="feedbackWorkflowText"></div>
+      </div>
+      <div class="feedback-week1" id="feedbackWeek1" style="display:none"></div>
+    </div>
+    <div style="text-align:center"><button class="next-btn" id="nextBtn" onclick="nextScenario()">Next Scenario</button></div>
+  </div>
+
+  <div class="results-screen" id="resultsScreen">
+    <div class="results-circle">
+      <div class="results-score" id="finalScore">0</div>
+      <div class="results-total" id="finalTotal">/ 10</div>
+    </div>
+    <div class="results-title" id="resultsTitle"></div>
+    <div class="results-msg" id="resultsMsg"></div>
+    <div class="results-breakdown" id="resultsBreakdown"></div>
+    <button class="restart-btn" onclick="restartGame()">Try Again</button>
+  </div>
+</div>
+
+<script>
+var S=[
+{label:"Scenario 01",desc:"A new supplier — a cloud-based project management tool called TaskFlow — has been onboarded. The 12-month contract starts 1 Jan 2025 and ends 31 Dec 2025. The contract value is $24,000. The agreement is an Order Form under a Hosted Services Agreement.",task:"Review the Coupa request below. One field contains an error — can you identify it?",fields:{justification:"We need this for the team.",requesttype:"New",legalframework:"Hosted Services Agreement",startdate:"01 Jan 2025",enddate:"31 Dec 2025",amount:"$24,000",agreementtype:"Order Form"},errorFields:["justification"],question:"What is wrong with this Coupa request?",options:[{text:"The justification is too vague — it gives no context about what the tool is, who needs it, or why. An auditor would have no idea what this purchase is for.",correct:true},{text:"The request type should be Renewal, not New, since this is a software subscription.",correct:false},{text:"The legal framework is wrong — a project management tool should use a General Services Agreement.",correct:false},{text:"The dollar amount does not match the contract.",correct:false}],feedback:{correct:"Exactly right. 'We need this for the team' tells an approver or auditor nothing. A good justification explains what the tool does, which team uses it, what business problem it solves, and why it is needed now.",wrong:"The error is in the Justification. 'We need this for the team' is far too vague. Justifications must be clear enough for a third party — like an auditor — to understand the purpose of the spend without any additional context.",workflow:"A vague justification causes approvers to query or reject the request, delaying procurement. In an audit it creates a compliance gap — there is no evidence of a legitimate business reason for the spend.",week1:"Week 1 link: TaskFlow is a cloud-hosted SaaS platform, so Hosted Services Agreement is correct."}},
+{label:"Scenario 02",desc:"Your company is renewing a contract with an existing IT security consultancy, CyberShield. They have been providing advisory services for 2 years. The new contract runs 1 Mar 2025 to 28 Feb 2026, valued at $85,000. The agreement is a Statement of Work under a Consulting Service Agreement.",task:"One field contains an error. Which one, and why?",fields:{justification:"CyberShield will provide ongoing cybersecurity advisory services including quarterly risk assessments, incident response planning, and annual penetration testing to support our ISO 27001 compliance programme.",requesttype:"New",legalframework:"Consulting Service Agreement",startdate:"01 Mar 2025",enddate:"28 Feb 2026",amount:"$85,000",agreementtype:"Statement of Work"},errorFields:["requesttype"],question:"What is wrong with this Coupa request?",options:[{text:"The justification uses too much technical jargon and should be simplified.",correct:false},{text:"The request type is wrong — this is a renewal of an existing supplier relationship, not a new engagement.",correct:true},{text:"The legal framework should be a General Services Agreement for security services.",correct:false},{text:"The type of agreement should be an Order Form, not a Statement of Work.",correct:false}],feedback:{correct:"Correct! CyberShield has been providing services for 2 years. This is a Renewal — the relationship exists and the contract is being extended. Marking it as New creates a false record.",wrong:"The error is the Request Type. This is a Renewal — CyberShield is an existing supplier. Selecting New incorrectly implies this is a first-time engagement.",workflow:"Incorrect request types affect supplier records, spend reporting, and audit trails. A renewal logged as new can trigger unnecessary onboarding steps and confuse approvers.",week1:"Week 1 link: Advisory services like risk assessments correctly use a Consulting Service Agreement."}},
+{label:"Scenario 03",desc:"The facilities team has signed a new contract with CleanPro for office cleaning across 3 sites. The contract runs 1 Feb 2025 to 31 Jan 2026. The total value is $36,000. The agreement is a Statement of Work under a General Services Agreement.",task:"Something is not right in this request. Can you find it?",fields:{justification:"CleanPro will deliver daily office cleaning services across our London, Manchester, and Bristol sites, covering all common areas, meeting rooms, and office floors, ensuring compliance with our health and safety standards.",requesttype:"New",legalframework:"General Services Agreement",startdate:"01 Feb 2025",enddate:"31 Jan 2027",amount:"$36,000",agreementtype:"Statement of Work"},errorFields:["enddate"],question:"Which field contains an error?",options:[{text:"The justification does not mention the contract value so it should be rejected.",correct:false},{text:"The legal framework is wrong — cleaning services should use a Hosted Services Agreement.",correct:false},{text:"The end date is wrong — it shows 31 Jan 2027 but the contract ends 31 Jan 2026. Dates must match the contract exactly.",correct:true},{text:"The dollar amount is too low for a 3-site cleaning contract.",correct:false}],feedback:{correct:"Spot on! The contract ends 31 Jan 2026 but Coupa shows 31 Jan 2027 — a full year out. Dates must exactly match the signed contract.",wrong:"The error is the End Date. The contract ends 31 Jan 2026 but 31 Jan 2027 was entered. Even a one-day discrepancy creates a compliance issue.",workflow:"A wrong end date means the system will not trigger a renewal reminder at the right time. The contract could expire unnoticed, leaving the company using a supplier with no active agreement.",week1:"Week 1 link: On-site operational services like cleaning correctly use a General Services Agreement."}},
+{label:"Scenario 04",desc:"A small stationery supplier, OfficeBasics, will only transact on their own standard terms. Spend is $2,500 per year. Legal reviewed and approved this in the pipeline call. The agreement runs 1 Apr 2025 to 31 Mar 2026.",task:"Review the request carefully. Is there an error?",fields:{justification:"OfficeBasics will supply stationery and office consumables to our London HQ on a standing order basis, covering paper, pens, folders, and other general office supplies required for day-to-day operations.",requesttype:"New",legalframework:"General Services Agreement",startdate:"01 Apr 2025",enddate:"31 Mar 2026",amount:"$2,500",agreementtype:"Order Form"},errorFields:["legalframework"],question:"What is wrong with this request?",options:[{text:"The amount is too low — all contracts under $5,000 should be processed differently.",correct:false},{text:"The legal framework is wrong — since the supplier uses their own terms and legal approved it in the pipeline call, this should be a Low Risk Addendum, not a General Services Agreement.",correct:true},{text:"The justification is too detailed and should be shortened.",correct:false},{text:"The type of agreement should be a Statement of Work, not an Order Form.",correct:false}],feedback:{correct:"Correct! When a supplier insists on their own terms and legal approved this in the pipeline call, the legal framework must be Low Risk Addendum — not GSA. Using GSA implies our standard template is in place, which it is not.",wrong:"The error is the Legal Framework. OfficeBasics is transacting on their own terms. When a supplier uses their own T&Cs and legal has approved the Low Risk Addendum route, that must be reflected in Coupa.",workflow:"Recording the wrong legal framework misrepresents the contractual position. If something goes wrong, the company may incorrectly assume GSA protections apply when they do not.",week1:"Week 1 link: This is exactly the Low Risk Addendum scenario from Week 1 — supplier insists on own terms, low value, legal approved."}},
+{label:"Scenario 05",desc:"The marketing team is bringing in BrandSpark, a creative agency, to redesign the company website. First time using BrandSpark. The project runs 1 Jun 2025 to 30 Nov 2025. The fee is $120,000 under a Statement of Work and Consulting Service Agreement.",task:"One field has been filled in incorrectly. Find it.",fields:{justification:"Engaging BrandSpark agency for a website redesign project.",requesttype:"New",legalframework:"Consulting Service Agreement",startdate:"01 Jun 2025",enddate:"30 Nov 2025",amount:"$120,000",agreementtype:"Statement of Work"},errorFields:["justification"],question:"What is the problem with this Coupa request?",options:[{text:"The request type should be RFX since this is a new supplier and should have gone through a competitive tender.",correct:false},{text:"The justification is not good enough — it does not explain the business need, scope, or why BrandSpark was selected. An auditor would have no meaningful context.",correct:true},{text:"The legal framework should be a General Services Agreement for creative agencies.",correct:false},{text:"The end date is too short for a website redesign project.",correct:false}],feedback:{correct:"Right! 'Engaging BrandSpark agency for a website redesign project' barely says anything. A strong justification for $120,000 should explain the business driver, scope, expected outcome, and why this supplier was chosen.",wrong:"The Justification is the problem. For a $120,000 engagement, this is far too thin. Approvers need the business case. Auditors need evidence the spend was legitimate.",workflow:"Weak justifications on high-value requests are likely to be challenged by senior approvers, causing delays. They also create audit findings — insufficient documentation is flagged as a governance failure.",week1:"Week 1 link: Creative agencies providing strategic and design expertise use a Consulting Service Agreement — correct here."}},
+{label:"Scenario 06",desc:"The HR team is terminating a contract early with TrainingCo. The original contract ran until 31 Dec 2025 but is being ended on 30 Jun 2025 due to a change in strategy. The remaining value being terminated is $40,000.",task:"There is an error in this request. Can you spot it?",fields:{justification:"TrainingCo contract is being terminated early following a strategic decision to bring L&D in-house. All deliverables to date have been received and signed off. Early termination clause invoked per Section 12 of the contract.",requesttype:"Renewal",legalframework:"General Services Agreement",startdate:"01 Jan 2025",enddate:"30 Jun 2025",amount:"$40,000",agreementtype:"Statement of Work"},errorFields:["requesttype"],question:"Which field is incorrect?",options:[{text:"The justification should not reference specific contract clauses — that is too much detail.",correct:false},{text:"The request type is wrong — this is a Termination, not a Renewal. The contract is being ended early.",correct:true},{text:"The end date should show the original contract end date, not the termination date.",correct:false},{text:"The legal framework should be a Consulting Service Agreement for L&D providers.",correct:false}],feedback:{correct:"Exactly right. This contract is being terminated early — that is a Termination, not a Renewal. A renewal extends a contract; this is the opposite.",wrong:"The Request Type is wrong. Terminating a contract early is a Termination — not a Renewal. This completely misrepresents the action being taken.",workflow:"A termination processed as a renewal could result in the contract not being properly closed, continuing payment runs, and failing to trigger supplier offboarding.",week1:"Week 1 link: L&D providers delivering training use a GSA unless the work is strategic or advisory in nature."}},
+{label:"Scenario 07",desc:"The finance team is adding a new analytics module to an existing SaaS platform, FinanceCloud. The master HSA is already in place. The Order Form runs 1 Aug 2025 to 31 Jul 2026 and costs $18,000.",task:"Review the request. Something is not right.",fields:{justification:"Adding the advanced analytics module to our existing FinanceCloud platform to enable automated financial reporting and real-time budget tracking for the Finance and FP&A teams, replacing the current manual Excel-based process.",requesttype:"New",legalframework:"Hosted Services Agreement",startdate:"01 Aug 2025",enddate:"31 Jul 2026",amount:"$18,000",agreementtype:"Amendment"},errorFields:["agreementtype"],question:"What is wrong with this request?",options:[{text:"The request type should be Renewal since FinanceCloud is an existing supplier.",correct:false},{text:"The type of agreement is wrong — adding a new module via an Order Form should be recorded as Order Form, not Amendment. An Amendment changes an existing agreement; an Order Form adds new products or services.",correct:true},{text:"The justification is too long and detailed.",correct:false},{text:"The legal framework should be a General Services Agreement since this involves financial data.",correct:false}],feedback:{correct:"Correct! An Order Form adds new products or services under an existing master agreement. An Amendment changes the terms of an existing agreement — such as updating pricing or scope. These are different documents with different legal implications.",wrong:"The Type of Agreement is wrong. An Order Form adds new services under an existing master agreement. An Amendment modifies existing terms. Using the wrong type misrepresents the legal document being executed.",workflow:"Using the wrong agreement type creates confusion in contract management. If the document is later referenced in a dispute or audit, the Coupa record will not match the actual agreement signed.",week1:"Week 1 link: FinanceCloud is a cloud-hosted SaaS platform — Hosted Services Agreement is the correct legal framework."}},
+{label:"Scenario 08",desc:"The procurement team is running a competitive tender (RFX) to find a new logistics provider. Three suppliers have been invited to bid. The estimated contract value is $500,000 over 3 years. The RFX process runs Sep to Nov 2025.",task:"There is an error in this request. Find it.",fields:{justification:"Running a competitive RFX to select a new logistics partner for our UK distribution network. Current contract expires Dec 2025. Three pre-qualified suppliers have been invited to submit proposals.",requesttype:"RFX",legalframework:"General Services Agreement",startdate:"01 Sep 2025",enddate:"30 Nov 2025",amount:"$50,000",agreementtype:"Statement of Work"},errorFields:["amount"],question:"What is the error in this request?",options:[{text:"The request type should be New since a new supplier will be selected.",correct:false},{text:"The justification should not mention the existing provider — this is commercially sensitive.",correct:false},{text:"The dollar amount is wrong — the estimated contract value is $500,000 but only $50,000 has been entered. A zero has been dropped.",correct:true},{text:"The type of agreement should be an Order Form for a logistics contract.",correct:false}],feedback:{correct:"Well spotted! The estimated value is $500,000 but $50,000 was entered — a zero was dropped. Dollar amounts in Coupa must match the contract value exactly.",wrong:"The error is the Dollar Amount. The contract value is $500,000 but $50,000 was entered. This is a common data entry mistake.",workflow:"An incorrect amount means the request is routed to the wrong approval tier. A $50,000 request may only need manager approval, whereas $500,000 likely requires CFO or board-level sign-off — a significant governance failure.",week1:"Week 1 link: RFX is the correct request type for a competitive tender. Once a supplier is selected, a new request will be raised with the appropriate legal framework."}},
+{label:"Scenario 09",desc:"DataSolutions was discovered to be providing data analytics services without a contract. They have been operating for 6 months. Procurement needs to retrospectively formalise the arrangement. The value for the period already worked is $30,000.",task:"Review the request and identify the error.",fields:{justification:"DataSolutions has been providing data analytics and reporting services to the Business Intelligence team for 6 months without a formal contract. This request formalises the existing arrangement retrospectively and ensures compliance with procurement policy.",requesttype:"New",legalframework:"Consulting Service Agreement",startdate:"01 Oct 2024",enddate:"31 Mar 2025",amount:"$30,000",agreementtype:"Statement of Work"},errorFields:["requesttype"],question:"What is the error in this Coupa request?",options:[{text:"The request type should be Remediation — this is not a new engagement, it is formalising a supplier that is already operating without a contract.",correct:true},{text:"The justification should not admit that the supplier was used without a contract.",correct:false},{text:"The legal framework should be a General Services Agreement for data services.",correct:false},{text:"The start date should be today's date, not 6 months ago.",correct:false}],feedback:{correct:"Exactly right. Remediation is specifically for situations where a supplier is already engaged without being properly onboarded. Using New implies a fresh engagement, which is inaccurate and hides the compliance issue.",wrong:"The Request Type should be Remediation. This exists for cases where a supplier is already providing services without a proper contract. It is not a New engagement.",workflow:"Using Remediation triggers the right review process including additional compliance checks. It creates an accurate audit trail showing the company identified and corrected the issue — important for regulators.",week1:"Week 1 link: Data analytics and reporting expertise is a knowledge-based service — Consulting Service Agreement is appropriate here."}},
+{label:"Scenario 10",desc:"The legal team is signing an amendment to an existing contract with outside counsel, LawFirm LLP, to increase the fee cap from $200,000 to $280,000 for the current contract year. All other terms remain the same. The contract runs to 31 Dec 2025.",task:"One field in this request is incorrect. Which one?",fields:{justification:"Amending the existing engagement letter with LawFirm LLP to increase the annual fee cap from $200,000 to $280,000 due to additional litigation support required for the ongoing commercial dispute. All other terms remain unchanged.",requesttype:"Renewal",legalframework:"Consulting Service Agreement",startdate:"01 Jan 2025",enddate:"31 Dec 2025",amount:"$280,000",agreementtype:"Amendment"},errorFields:["requesttype"],question:"What is wrong with this request?",options:[{text:"The amount should show only the increase ($80,000), not the new total fee cap.",correct:false},{text:"The type of agreement should be an Order Form, not an Amendment.",correct:false},{text:"The request type is wrong — this is not a Renewal. The contract is not being extended, just modified. The correct type is New since a new Amendment document is being executed.",correct:true},{text:"The legal framework should be a General Services Agreement for legal firms.",correct:false}],feedback:{correct:"Correct! A Renewal extends a contract beyond its current end date. This amendment modifies a term within the existing period — no extension is happening. A new Amendment document is being signed, so the request type is New.",wrong:"The Request Type is wrong. Renewal means the contract period is being extended. Here the contract period stays the same — only the fee cap changes. A new Amendment document is being signed, so the type should be New.",workflow:"Logging an amendment as a renewal causes reporting errors around contract expiry dates. The system may record a new end date that does not exist, affecting renewal reminders and spend reporting.",week1:"Week 1 link: Legal services and outside counsel providing advisory and litigation support correctly use a Consulting Service Agreement."}}
+];
+
+var currentQ=0,score=0,streak=0,answered=false,results=[];
+
+function startGame(){document.getElementById("startScreen").classList.add("hidden");document.getElementById("gameArea").classList.add("show");loadScenario();}
+
+function loadScenario(){
+  var s=S[currentQ];answered=false;
+  document.getElementById("progressFill").style.width=(currentQ/S.length*100)+"%";
+  document.getElementById("progressText").textContent="Scenario "+(currentQ+1)+" of "+S.length;
+  document.getElementById("scenarioLabel").textContent=s.label;
+  document.getElementById("scenarioDesc").textContent=s.desc;
+  document.getElementById("scenarioTask").textContent=s.task;
+  ["justification","requesttype","legalframework","startdate","enddate","amount","agreementtype"].forEach(function(f){
+    var el=document.getElementById("field-"+f);
+    el.textContent=s.fields[f];
+    el.className="field-value"+(s.errorFields.indexOf(f)!==-1?" highlighted":"");
+  });
+  document.getElementById("optionsList").innerHTML=s.options.map(function(o,i){
+    return'<button class="option-btn" onclick="selectAnswer('+i+')" id="opt-'+i+'"><span class="option-letter">'+String.fromCharCode(65+i)+'</span><span class="option-text">'+o.text+"</span></button>";
+  }).join("");
+  document.getElementById("feedback").className="feedback";
+  document.getElementById("nextBtn").className="next-btn";
+  document.getElementById("feedbackWorkflow").style.display="none";
+  document.getElementById("feedbackWeek1").style.display="none";
+}
+
+function selectAnswer(idx){
+  if(answered)return;answered=true;
+  var s=S[currentQ],ok=s.options[idx].correct;
+  document.querySelectorAll(".option-btn").forEach(function(b){b.disabled=true;});
+  s.options.forEach(function(o,i){
+    var b=document.getElementById("opt-"+i);
+    if(o.correct)b.classList.add("correct");
+    else if(i===idx)b.classList.add("selected-wrong");
+    else b.classList.add("wrong");
+  });
+  ["justification","requesttype","legalframework","startdate","enddate","amount","agreementtype"].forEach(function(f){
+    var el=document.getElementById("field-"+f);
+    el.classList.remove("highlighted");
+    el.classList.add(s.errorFields.indexOf(f)!==-1?"has-error":"is-correct");
+  });
+  if(ok){score++;streak++;}else{streak=0;}
+  document.getElementById("scoreDisplay").textContent=score;
+  document.getElementById("streakDisplay").textContent=streak;
+  results.push({correct:ok,label:s.label,errorFields:s.errorFields});
+  var fb=document.getElementById("feedback");
+  fb.className="feedback show "+(ok?"correct-fb":"wrong-fb");
+  document.getElementById("feedbackIcon").textContent=ok?"✓":"✗";
+  document.getElementById("feedbackTitle").textContent=ok?(streak>=2?streak+" in a row!":"Correct!"):"Not quite — here is why:";
+  document.getElementById("feedbackBody").textContent=ok?s.feedback.correct:s.feedback.wrong;
+  var wf=document.getElementById("feedbackWorkflow");wf.style.display="block";
+  document.getElementById("feedbackWorkflowText").textContent=s.feedback.workflow;
+  if(s.feedback.week1){var w1=document.getElementById("feedbackWeek1");w1.style.display="block";w1.textContent=s.feedback.week1;}
+  var nb=document.getElementById("nextBtn");nb.className="next-btn show";
+  nb.textContent=currentQ<S.length-1?"Next Scenario":"See Results";
+}
+
+function nextScenario(){currentQ++;if(currentQ>=S.length)showResults();else loadScenario();}
+
+function showResults(){
+  document.getElementById("gameArea").classList.remove("show");
+  document.getElementById("resultsScreen").classList.add("show");
+  document.getElementById("finalScore").textContent=score;
+  document.getElementById("finalTotal").textContent="/ "+S.length;
+  var p=score/S.length,title,msg;
+  if(p===1){title="Perfect Score!";msg="Outstanding! You have a thorough understanding of how to complete a Coupa request correctly. Your requests will flow through the workflow without delays.";}
+  else if(p>=0.8){title="Excellent Work!";msg="Great job — you have a strong grasp of the mandatory fields and why they matter. Review the ones you missed and you will be submitting error-free requests in no time.";}
+  else if(p>=0.6){title="Good Effort!";msg="You are getting there. Focus on the fields you found tricky — especially justifications and request types, which are most commonly missed.";}
+  else{title="Keep Practising!";msg="Coupa requests take time to get right. Try again and focus on understanding what each field means for the workflow and audit trail.";}
+  document.getElementById("resultsTitle").textContent=title;
+  document.getElementById("resultsMsg").textContent=msg;
+  document.getElementById("resultsBreakdown").innerHTML=results.map(function(r,i){
+    return'<div class="breakdown-item '+(r.correct?"correct-bd":"wrong-bd")+'"><div style="font-size:11px;color:#5a7184;margin-bottom:4px">'+(r.correct?"✓":"✗")+" "+r.label+'</div><div style="font-size:12px;color:#5a7184;margin-bottom:6px">'+S[i].desc.substring(0,60)+'...</div><div style="font-size:12px;color:var(--gold)">Error field: '+r.errorFields.join(", ")+"</div></div>";
+  }).join("");
+}
+
+function restartGame(){
+  currentQ=0;score=0;streak=0;answered=false;results=[];
+  document.getElementById("scoreDisplay").textContent=0;
+  document.getElementById("streakDisplay").textContent=0;
+  document.getElementById("resultsScreen").classList.remove("show");
+  document.getElementById("gameArea").classList.add("show");
+  loadScenario();
+}
+</script>
+</body>
+</html>
